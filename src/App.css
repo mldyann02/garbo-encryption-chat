@@ -59,6 +59,13 @@ h1 {
   font-size: 0.94rem;
 }
 
+.author {
+  margin: 0.45rem 0 0;
+  color: #7c5a32;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 .control-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

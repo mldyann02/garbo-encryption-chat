@@ -42,6 +42,7 @@ export function CipherControls({
       <header>
         <p className="eyebrow">Workflow</p>
         <h1>Conventional Encryptions Chat Program</h1>
+        <p className="author">By Melody Ann M. Garbo</p>
         <p className="subtitle">
           Choose Cipher - Enter Key - Type Message - Encrypt - Send - Decrypt
         </p>
