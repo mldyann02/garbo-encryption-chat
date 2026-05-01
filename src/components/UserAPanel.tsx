@@ -1,5 +1,6 @@
 import type { ChangeEvent } from "react";
 import type { CipherOption, ChatMessage } from "../types/chat";
+import { PlayfairMatrixDisplay } from "./PlayfairMatrixDisplay";
 
 interface UserAPanelProps {
   cipherA: CipherOption;
@@ -69,6 +70,8 @@ export function UserAPanel({
             placeholder="Example: 3 or LEMON"
           />
         </label>
+
+        {cipherA === "playfair" && <PlayfairMatrixDisplay matrixKey={keyValueA} />}
 
         <label className="field">
           <span>Your Message (Plaintext)</span>

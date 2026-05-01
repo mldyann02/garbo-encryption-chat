@@ -13,7 +13,7 @@ const FILLER = "X";
 
 const normalize = (str) => String(str ?? "").toUpperCase().replace(/J/g, "I").replace(/[^A-Z]/g, "");
 
-const buildMatrix = (key) => {
+export const buildMatrix = (key) => {
   const merged = `${normalize(key)}${ALPHABET}`;
   const unique = [];
   for (const ch of merged) {
