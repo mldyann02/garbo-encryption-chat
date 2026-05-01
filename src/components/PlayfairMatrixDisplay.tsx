@@ -25,7 +25,7 @@ export function PlayfairMatrixDisplay({ matrixKey }: PlayfairMatrixDisplayProps)
             <tr key={rowIndex}>
               {row.map((letter, colIndex) => (
                 <td key={`${rowIndex}-${colIndex}`} className="matrix-cell">
-                  {letter}
+                  {letter === "I" ? "I/J" : letter}
                 </td>
               ))}
             </tr>
