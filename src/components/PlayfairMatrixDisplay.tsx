@@ -1,11 +1,11 @@
 import { playfairBuildMatrix } from "../utils/ciphers";
 
 interface PlayfairMatrixDisplayProps {
-  key: string;
+  matrixKey: string;
 }
 
-export function PlayfairMatrixDisplay({ key }: PlayfairMatrixDisplayProps) {
-  if (!key) {
+export function PlayfairMatrixDisplay({ matrixKey }: PlayfairMatrixDisplayProps) {
+  if (!matrixKey) {
     return (
       <div className="playfair-matrix">
         <h4>Playfair Matrix</h4>
@@ -14,7 +14,7 @@ export function PlayfairMatrixDisplay({ key }: PlayfairMatrixDisplayProps) {
     );
   }
 
-  const matrix = playfairBuildMatrix(key);
+  const matrix = playfairBuildMatrix(matrixKey);
 
   return (
     <div className="playfair-matrix">

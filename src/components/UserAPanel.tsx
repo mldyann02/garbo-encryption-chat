@@ -71,7 +71,7 @@ export function UserAPanel({
           />
         </label>
 
-        {cipherA === "playfair" && <PlayfairMatrixDisplay key={keyValueA} />}
+        {cipherA === "playfair" && <PlayfairMatrixDisplay matrixKey={keyValueA} />}
 
         <label className="field">
           <span>Your Message (Plaintext)</span>
