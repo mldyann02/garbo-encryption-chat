@@ -18,3 +18,4 @@ export const railFenceEncrypt: CipherModule["encrypt"];
 export const railFenceDecrypt: CipherModule["decrypt"];
 export const playfairEncrypt: CipherModule["encrypt"];
 export const playfairDecrypt: CipherModule["decrypt"];
+export const playfairBuildMatrix: (key: string) => string[][];

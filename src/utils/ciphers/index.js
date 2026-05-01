@@ -1,7 +1,7 @@
 import { encrypt as caesarEncrypt, decrypt as caesarDecrypt } from "./caesar";
 import { encrypt as vigenereEncrypt, decrypt as vigenereDecrypt } from "./vigenere";
 import { encrypt as railFenceEncrypt, decrypt as railFenceDecrypt } from "./railFence";
-import { encrypt as playfairEncrypt, decrypt as playfairDecrypt } from "./playfair";
+import { encrypt as playfairEncrypt, decrypt as playfairDecrypt, buildMatrix as playfairBuildMatrix } from "./playfair";
 
 export const ciphers = {
   caesar: { encrypt: caesarEncrypt, decrypt: caesarDecrypt },
@@ -19,4 +19,5 @@ export {
   railFenceDecrypt,
   playfairEncrypt,
   playfairDecrypt,
+  playfairBuildMatrix,
 };

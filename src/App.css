@@ -507,3 +507,52 @@ button:active {
     width: 100%;
   }
 }
+
+.playfair-matrix {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.8rem;
+  background: #fafaf8;
+  border-radius: 0.6rem;
+  border: 1px solid #e8dcc8;
+}
+
+.playfair-matrix h4 {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6a5b4d;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.matrix-placeholder {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #a89f95;
+  font-style: italic;
+  text-align: center;
+  padding: 0.5rem 0;
+}
+
+.matrix-table {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 200px;
+  margin: 0 auto;
+}
+
+.matrix-cell {
+  width: 28px;
+  height: 28px;
+  text-align: center;
+  vertical-align: middle;
+  border: 1px solid #d5c9b8;
+  background: #fffefc;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #b3652f;
+  line-height: 1;
+  padding: 0;
+}
