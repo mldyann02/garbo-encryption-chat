@@ -6,6 +6,8 @@ interface CipherControlsProps {
   keyValue: string;
   message: string;
   encryptedPreview: string;
+  decryptedPreview: string;
+  workflowNote: string;
   onCipherChange: (value: CipherOption) => void;
   onKeyChange: (value: string) => void;
   onMessageChange: (value: string) => void;
@@ -26,6 +28,8 @@ export function CipherControls({
   keyValue,
   message,
   encryptedPreview,
+  decryptedPreview,
+  workflowNote,
   onCipherChange,
   onKeyChange,
   onMessageChange,
@@ -91,6 +95,16 @@ export function CipherControls({
         />
       </label>
 
+      <label className="field">
+        <span>Decrypted Output (Receiver View)</span>
+        <textarea
+          value={decryptedPreview}
+          readOnly
+          rows={3}
+          placeholder="Click Decrypt to preview receiver output"
+        />
+      </label>
+
       <div className="actions" role="group" aria-label="Message actions">
         <button type="button" onClick={onEncrypt}>
           Encrypt
@@ -102,6 +116,8 @@ export function CipherControls({
           Decrypt
         </button>
       </div>
+
+      <p className="workflow-note">{workflowNote}</p>
     </section>
   );
 }

@@ -20,16 +20,17 @@ export function ChatHistory({ messages }: ChatHistoryProps) {
           >
             <p className="sender">{message.sender}</p>
             <p>
-              <strong>Cipher:</strong> {message.cipher} | <strong>Key:</strong> {message.key || "-"}
+              <strong>Cipher:</strong> {message.cipher} | <strong>Key:</strong>{" "}
+              {message.key || "-"}
             </p>
             <p>
               <strong>Plaintext:</strong> {message.plaintext}
             </p>
             <p>
-              <strong>Encrypted:</strong> {message.encrypted}
+              <strong>Encrypted Payload:</strong> {message.encrypted}
             </p>
             <p>
-              <strong>Decrypted:</strong> {message.decrypted}
+              <strong>Decrypted Output:</strong> {message.decrypted}
             </p>
           </li>
         ))}

@@ -109,6 +109,15 @@ textarea {
   flex-wrap: wrap;
 }
 
+.workflow-note {
+  margin: 0.1rem 0 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.6rem;
+  background: #f1e6d5;
+  color: #5a4630;
+  font-size: 0.88rem;
+}
+
 button {
   border: none;
   border-radius: 999px;
