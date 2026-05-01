@@ -1,41 +1,29 @@
 import { useState } from "react";
 import { ChatHistory } from "./components/ChatHistory";
-import { CipherControls } from "./components/CipherControls";
+import { UserAPanel } from "./components/UserAPanel";
+import { UserBPanel } from "./components/UserBPanel";
 import type { ChatMessage, CipherOption } from "./types/chat";
 import { ciphers } from "./utils/ciphers";
 import "./App.css";
 
-const initialMessages: ChatMessage[] = [
-  {
-    id: "1",
-    sender: "User A",
-    plaintext: "HELLO WORLD",
-    encrypted: "KHOOR ZRUOG",
-    decrypted: "HELLO WORLD",
-    cipher: "caesar",
-    key: "3",
-  },
-  {
-    id: "2",
-    sender: "User B",
-    plaintext: "READY FOR LAB",
-    encrypted: "UHDGB IRU ODE",
-    decrypted: "READY FOR LAB",
-    cipher: "caesar",
-    key: "3",
-  },
-];
+const initialMessages: ChatMessage[] = [];
 
 function App() {
-  const [cipher, setCipher] = useState<CipherOption>("caesar");
-  const [keyValue, setKeyValue] = useState("3");
-  const [message, setMessage] = useState("");
-  const [encryptedPreview, setEncryptedPreview] = useState("");
-  const [decryptedPreview, setDecryptedPreview] = useState("");
-  const [workflowNote, setWorkflowNote] = useState(
-    "Enter a message and click Encrypt.",
-  );
+  // User A state
+  const [cipherA, setCipherA] = useState<CipherOption>("caesar");
+  const [keyValueA, setKeyValueA] = useState("3");
+  const [plaintextA, setPlaintextA] = useState("");
+
+  // User B state
+  const [cipherB, setCipherB] = useState<CipherOption>("caesar");
+  const [keyValueB, setKeyValueB] = useState("3");
+  const [plaintextB, setPlaintextB] = useState("");
+
+  // Shared state
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [showChatHistory, setShowChatHistory] = useState(true);
+  const [decryptionKeyA, setDecryptionKeyA] = useState("3");
+  const [decryptionKeyB, setDecryptionKeyB] = useState("3");
 
   const cipherMap = ciphers as Record<
     CipherOption,
@@ -45,89 +33,137 @@ function App() {
     }
   >;
 
-  const getCipherHandler = () => cipherMap[cipher] ?? cipherMap.caesar;
+  const getCipherHandler = (cipher: CipherOption) =>
+    cipherMap[cipher] ?? cipherMap.caesar;
 
-  const handleEncrypt = () => {
-    if (!message.trim()) {
-      setWorkflowNote("Type a plaintext message before encrypting.");
+  // User A sends a message
+  const handleSendA = () => {
+    if (!plaintextA.trim()) {
       return;
     }
 
-    const encrypted = getCipherHandler().encrypt(message, keyValue);
-    setEncryptedPreview(encrypted);
-    setDecryptedPreview("");
-    setWorkflowNote(
-      "Message encrypted. Click Send to move it into chat history.",
-    );
-  };
-
-  const handleSend = () => {
-    if (!message.trim() && !encryptedPreview.trim()) {
-      setWorkflowNote("Type a message first, then Encrypt or Send.");
-      return;
-    }
-
-    const encryptedPayload = encryptedPreview.trim()
-      ? encryptedPreview
-      : getCipherHandler().encrypt(message, keyValue);
-    const decryptedPayload = getCipherHandler().decrypt(
-      encryptedPayload,
-      keyValue,
-    );
+    const encrypted = getCipherHandler(cipherA).encrypt(plaintextA, keyValueA);
 
     const nextMessage: ChatMessage = {
       id: crypto.randomUUID(),
-      sender: messages.length % 2 === 0 ? "User A" : "User B",
-      plaintext: message,
-      encrypted: encryptedPayload,
-      decrypted: decryptedPayload,
-      cipher,
-      key: keyValue,
+      sender: "User A",
+      plaintext: plaintextA,
+      encrypted: encrypted,
+      decrypted: plaintextA, // User A can see their own plaintext
+      cipher: cipherA,
+      key: keyValueA,
     };
 
     setMessages((current) => [...current, nextMessage]);
-    setMessage("");
-    setEncryptedPreview("");
-    setDecryptedPreview(decryptedPayload);
-    setWorkflowNote(
-      "Message sent. Receiver can view decrypted output in chat history.",
-    );
+    setPlaintextA("");
   };
 
-  const handleDecrypt = () => {
-    if (!encryptedPreview.trim()) {
-      setWorkflowNote(
-        "Encrypt or send a message first so there is ciphertext to decrypt.",
-      );
+  // User B sends a message
+  const handleSendB = () => {
+    if (!plaintextB.trim()) {
       return;
     }
 
-    const decrypted = getCipherHandler().decrypt(encryptedPreview, keyValue);
-    setDecryptedPreview(decrypted);
-    setWorkflowNote(
-      "Decryption complete. Compare decrypted text with original plaintext.",
-    );
+    const encrypted = getCipherHandler(cipherB).encrypt(plaintextB, keyValueB);
+
+    const nextMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      sender: "User B",
+      plaintext: plaintextB,
+      encrypted: encrypted,
+      decrypted: plaintextB, // User B can see their own plaintext
+      cipher: cipherB,
+      key: keyValueB,
+    };
+
+    setMessages((current) => [...current, nextMessage]);
+    setPlaintextB("");
+  };
+
+  // Get decrypted message for User A viewing messages from User B
+  const getDecryptedMessageForA = (msg: ChatMessage) => {
+    if (msg.sender === "User A") {
+      return msg.plaintext; // User A can see their own messages
+    }
+    // Try to decrypt User B's message with User A's decryption key
+    try {
+      return getCipherHandler(msg.cipher).decrypt(msg.encrypted, decryptionKeyA);
+    } catch {
+      return "[Unable to decrypt]";
+    }
+  };
+
+  // Get decrypted message for User B viewing messages from User A
+  const getDecryptedMessageForB = (msg: ChatMessage) => {
+    if (msg.sender === "User B") {
+      return msg.plaintext; // User B can see their own messages
+    }
+    // Try to decrypt User A's message with User B's decryption key
+    try {
+      return getCipherHandler(msg.cipher).decrypt(msg.encrypted, decryptionKeyB);
+    } catch {
+      return "[Unable to decrypt]";
+    }
+  };
+
+  const handleClearChatHistory = () => {
+    setMessages([]);
   };
 
   return (
     <main className="app-shell">
       <div className="backdrop" aria-hidden="true" />
-      <div className="layout">
-        <CipherControls
-          cipher={cipher}
-          keyValue={keyValue}
-          message={message}
-          encryptedPreview={encryptedPreview}
-          decryptedPreview={decryptedPreview}
-          workflowNote={workflowNote}
-          onCipherChange={setCipher}
-          onKeyChange={setKeyValue}
-          onMessageChange={setMessage}
-          onEncrypt={handleEncrypt}
-          onSend={handleSend}
-          onDecrypt={handleDecrypt}
+      <div className="app-header">
+        <h1>Conventional Encryptions Chat Program</h1>
+        <p className="app-subtitle">By Melody Ann M. Garbo</p>
+        <div className="header-controls">
+          <button
+            type="button"
+            className="btn-toggle"
+            onClick={() => setShowChatHistory(!showChatHistory)}
+          >
+            {showChatHistory ? "Hide" : "Show"} Chat History
+          </button>
+          <button
+            type="button"
+            className="btn-clear-chat"
+            onClick={handleClearChatHistory}
+          >
+            Clear Chat History
+          </button>
+        </div>
+      </div>
+
+      <div className={`layout ${!showChatHistory ? "hide-chat" : ""}`}>
+        <UserAPanel
+          cipherA={cipherA}
+          keyValueA={keyValueA}
+          plaintextA={plaintextA}
+          decryptionKeyA={decryptionKeyA}
+          messages={messages}
+          onCipherAChange={setCipherA}
+          onKeyValueAChange={setKeyValueA}
+          onPlaintextAChange={setPlaintextA}
+          onDecryptionKeyAChange={setDecryptionKeyA}
+          onSendA={handleSendA}
+          getDecryptedMessage={getDecryptedMessageForA}
         />
-        <ChatHistory messages={messages} />
+
+        {showChatHistory && <ChatHistory messages={messages} />}
+
+        <UserBPanel
+          cipherB={cipherB}
+          keyValueB={keyValueB}
+          plaintextB={plaintextB}
+          decryptionKeyB={decryptionKeyB}
+          messages={messages}
+          onCipherBChange={setCipherB}
+          onKeyValueBChange={setKeyValueB}
+          onPlaintextBChange={setPlaintextB}
+          onDecryptionKeyBChange={setDecryptionKeyB}
+          onSendB={handleSendB}
+          getDecryptedMessage={getDecryptedMessageForB}
+        />
       </div>
     </main>
   );
