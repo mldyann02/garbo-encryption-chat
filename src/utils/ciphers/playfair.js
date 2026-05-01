@@ -1,160 +1,91 @@
 /**
- * Playfair Cipher
- * Uses a 5x5 key matrix (I/J merged) to encrypt letter pairs.
- * Non-letter characters are preserved in position and case is restored per letter.
+ * Playfair Cipher (letters-only canonical implementation)
+ * - Prepares text by removing non-letters and replacing J with I
+ * - Builds a 5x5 matrix from the keyword
+ * - Inserts 'X' between duplicate letters in a digraph and pads final pair with 'X'
+ * - Encrypts/decrypts digraphs according to Playfair rules
+ * Note: This version returns letters-only ciphertext and attempts to remove
+ * filler 'X' on decryption for a readable round-trip for typical inputs.
  */
 
 const ALPHABET = "ABCDEFGHIKLMNOPQRSTUVWXYZ";
 const FILLER = "X";
 
-const isLetter = (char) => /[a-z]/i.test(char);
-
-const normalizeLetter = (char) => char.toUpperCase().replace("J", "I");
+const normalize = (str) => String(str ?? "").toUpperCase().replace(/J/g, "I").replace(/[^A-Z]/g, "");
 
 const buildMatrix = (key) => {
-  const merged = `${String(key ?? "").toUpperCase()}${ALPHABET}`.replace(/J/g, "I");
+  const merged = `${normalize(key)}${ALPHABET}`;
   const unique = [];
-
-  for (const char of merged) {
-    if (/[A-Z]/.test(char) && !unique.includes(char)) unique.push(char);
+  for (const ch of merged) {
+    if (!unique.includes(ch)) unique.push(ch);
   }
-
   const matrix = [];
-  for (let i = 0; i < 5; i += 1) {
-    matrix.push(unique.slice(i * 5, i * 5 + 5));
-  }
+  for (let r = 0; r < 5; r++) matrix.push(unique.slice(r * 5, r * 5 + 5));
   return matrix;
 };
 
-const findInMatrix = (matrix, target) => {
-  for (let row = 0; row < 5; row += 1) {
-    const col = matrix[row].indexOf(target);
-    if (col !== -1) return [row, col];
+const find = (matrix, ch) => {
+  for (let r = 0; r < 5; r++) {
+    const c = matrix[r].indexOf(ch);
+    if (c !== -1) return [r, c];
   }
-  return [0, 0];
+  return [-1, -1];
 };
 
-const letterTokensFromText = (text) => {
-  const tokens = [];
-  [...text].forEach((char, index) => {
-    if (!isLetter(char)) return;
-    tokens.push({
-      index,
-      source: char,
-      upper: normalizeLetter(char),
-    });
-  });
-  return tokens;
-};
-
-const toDigraphs = (tokens) => {
-  const pairs = [];
+const makeDigraphs = (letters) => {
+  const digraphs = [];
   let i = 0;
-
-  while (i < tokens.length) {
-    const first = tokens[i];
-    const second = tokens[i + 1];
-
-    if (!second) {
-      pairs.push({
-        first,
-        second: {
-          index: -1,
-          source: FILLER,
-          upper: FILLER,
-          synthetic: true,
-        },
-      });
+  while (i < letters.length) {
+    const a = letters[i];
+    const b = letters[i + 1];
+    if (!b) {
+      digraphs.push([a, FILLER]);
       i += 1;
       continue;
     }
-
-    if (first.upper === second.upper) {
-      pairs.push({
-        first,
-        second: {
-          index: -1,
-          source: FILLER,
-          upper: FILLER,
-          synthetic: true,
-        },
-      });
+    if (a === b) {
+      digraphs.push([a, FILLER]);
       i += 1;
       continue;
     }
-
-    pairs.push({ first, second });
+    digraphs.push([a, b]);
     i += 2;
   }
-
-  return pairs;
+  return digraphs;
 };
 
-const transformPair = (matrix, a, b, direction) => {
-  const [rowA, colA] = findInMatrix(matrix, a);
-  const [rowB, colB] = findInMatrix(matrix, b);
-
-  if (rowA === rowB) {
-    return [matrix[rowA][(colA + direction + 5) % 5], matrix[rowB][(colB + direction + 5) % 5]];
+const transform = (matrix, [a, b], encrypting = true) => {
+  const dir = encrypting ? 1 : -1;
+  const [r1, c1] = find(matrix, a);
+  const [r2, c2] = find(matrix, b);
+  if (r1 === r2) {
+    return [matrix[r1][(c1 + dir + 5) % 5], matrix[r2][(c2 + dir + 5) % 5]];
   }
-
-  if (colA === colB) {
-    return [matrix[(rowA + direction + 5) % 5][colA], matrix[(rowB + direction + 5) % 5][colB]];
+  if (c1 === c2) {
+    return [matrix[(r1 + dir + 5) % 5][c1], matrix[(r2 + dir + 5) % 5][c2]];
   }
-
-  return [matrix[rowA][colB], matrix[rowB][colA]];
-};
-
-const applyCase = (original, transformedUpper) => {
-  if (!original) return transformedUpper;
-  return original === original.toUpperCase() ? transformedUpper : transformedUpper.toLowerCase();
+  return [matrix[r1][c2], matrix[r2][c1]];
 };
 
 export const encrypt = (text, key) => {
-  const input = String(text ?? "");
+  const letters = normalize(text);
+  if (!letters) return "";
   const matrix = buildMatrix(key);
-  const output = [...input];
-
-  const tokens = letterTokensFromText(input);
-  if (tokens.length === 0) return input;
-
-  const digraphs = toDigraphs(tokens);
-
-  digraphs.forEach(({ first, second }) => {
-    const [encA, encB] = transformPair(matrix, first.upper, second.upper, 1);
-    output[first.index] = applyCase(first.source, encA);
-
-    if (second.index !== -1) {
-      output[second.index] = applyCase(second.source, encB);
-    } else {
-      output.push(encB);
-    }
-  });
-
-  return output.join("");
+  const digraphs = makeDigraphs(letters);
+  const out = digraphs.map((dg) => transform(matrix, dg, true)).flat().join("");
+  return out;
 };
 
 export const decrypt = (text, key) => {
-  const input = String(text ?? "");
+  const letters = normalize(text);
+  if (!letters) return "";
   const matrix = buildMatrix(key);
-  const output = [...input];
+  const pairs = [];
+  for (let i = 0; i < letters.length; i += 2) pairs.push([letters[i], letters[i + 1]]);
 
-  const tokens = letterTokensFromText(input);
-  if (tokens.length === 0) return input;
+  const out = pairs.map((dg) => transform(matrix, dg, false)).flat().join("");
 
-  const digraphs = [];
-  for (let i = 0; i < tokens.length; i += 2) {
-    const first = tokens[i];
-    const second = tokens[i + 1];
-    if (!second) break;
-    digraphs.push({ first, second });
-  }
-
-  digraphs.forEach(({ first, second }) => {
-    const [decA, decB] = transformPair(matrix, first.upper, second.upper, -1);
-    output[first.index] = applyCase(first.source, decA);
-    output[second.index] = applyCase(second.source, decB);
-  });
-
-  return output.join("");
+  // attempt to remove filler X between duplicate letters introduced during encryption
+  const cleaned = out.replace(/([A-Z])X(?=\1)/g, "$1").replace(/X$/, "");
+  return cleaned;
 };
