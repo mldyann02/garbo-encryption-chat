@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ChatHistory } from "./components/ChatHistory";
 import { CipherControls } from "./components/CipherControls";
 import type { ChatMessage, CipherOption } from "./types/chat";
+import { ciphers } from "./utils/ciphers";
 import "./App.css";
 
 const initialMessages: ChatMessage[] = [
@@ -30,22 +31,56 @@ function App() {
   const [keyValue, setKeyValue] = useState("3");
   const [message, setMessage] = useState("");
   const [encryptedPreview, setEncryptedPreview] = useState("");
+  const [decryptedPreview, setDecryptedPreview] = useState("");
+  const [workflowNote, setWorkflowNote] = useState(
+    "Enter a message and click Encrypt.",
+  );
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
 
+  const cipherMap = ciphers as Record<
+    CipherOption,
+    {
+      encrypt: (text: string, key: string) => string;
+      decrypt: (text: string, key: string) => string;
+    }
+  >;
+
+  const getCipherHandler = () => cipherMap[cipher] ?? cipherMap.caesar;
+
   const handleEncrypt = () => {
-    if (!message.trim()) return;
-    setEncryptedPreview(`[${cipher.toUpperCase()}] ${message}`);
+    if (!message.trim()) {
+      setWorkflowNote("Type a plaintext message before encrypting.");
+      return;
+    }
+
+    const encrypted = getCipherHandler().encrypt(message, keyValue);
+    setEncryptedPreview(encrypted);
+    setDecryptedPreview("");
+    setWorkflowNote(
+      "Message encrypted. Click Send to move it into chat history.",
+    );
   };
 
   const handleSend = () => {
-    if (!encryptedPreview.trim()) return;
+    if (!message.trim() && !encryptedPreview.trim()) {
+      setWorkflowNote("Type a message first, then Encrypt or Send.");
+      return;
+    }
+
+    const encryptedPayload = encryptedPreview.trim()
+      ? encryptedPreview
+      : getCipherHandler().encrypt(message, keyValue);
+    const decryptedPayload = getCipherHandler().decrypt(
+      encryptedPayload,
+      keyValue,
+    );
 
     const nextMessage: ChatMessage = {
       id: crypto.randomUUID(),
       sender: messages.length % 2 === 0 ? "User A" : "User B",
       plaintext: message,
-      encrypted: encryptedPreview,
-      decrypted: "(Pending integration)",
+      encrypted: encryptedPayload,
+      decrypted: decryptedPayload,
       cipher,
       key: keyValue,
     };
@@ -53,11 +88,25 @@ function App() {
     setMessages((current) => [...current, nextMessage]);
     setMessage("");
     setEncryptedPreview("");
+    setDecryptedPreview(decryptedPayload);
+    setWorkflowNote(
+      "Message sent. Receiver can view decrypted output in chat history.",
+    );
   };
 
   const handleDecrypt = () => {
-    if (!encryptedPreview.trim()) return;
-    setEncryptedPreview(`${encryptedPreview} -> (decrypted preview pending)`);
+    if (!encryptedPreview.trim()) {
+      setWorkflowNote(
+        "Encrypt or send a message first so there is ciphertext to decrypt.",
+      );
+      return;
+    }
+
+    const decrypted = getCipherHandler().decrypt(encryptedPreview, keyValue);
+    setDecryptedPreview(decrypted);
+    setWorkflowNote(
+      "Decryption complete. Compare decrypted text with original plaintext.",
+    );
   };
 
   return (
@@ -69,6 +118,8 @@ function App() {
           keyValue={keyValue}
           message={message}
           encryptedPreview={encryptedPreview}
+          decryptedPreview={decryptedPreview}
+          workflowNote={workflowNote}
           onCipherChange={setCipher}
           onKeyChange={setKeyValue}
           onMessageChange={setMessage}
